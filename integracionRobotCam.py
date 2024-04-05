@@ -43,6 +43,7 @@ def pprint(*args, **kwargs):
 
 pprint('xArm-Python-SDK Version:{}'.format(version.__version__))
 
+""" Init xArm Object """
 arm = XArmAPI('192.168.1.208')
 arm.clean_warn()
 arm.clean_error()
@@ -54,7 +55,7 @@ time.sleep(1)
 variables = {'height': 0, 'max_cubes': 0, 'COUNTER': 0}
 params = {'speed': 100, 'acc': 2000, 'angle_speed': 20, 'angle_acc': 500, 'events': {}, 'variables': variables, 'callback_in_thread': True, 'quit': False}
 
-# Camara info
+""" Camara info """
 HOST = "192.168.1.130"  # The server's hostname or IP address
 PORT = 20000  # The port used by the server
 
