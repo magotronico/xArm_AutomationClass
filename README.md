@@ -9,6 +9,7 @@ This repository is a personal collection of my coursework practices focusing on 
 
 - **Python Version**: Ensure Python 3.11.8 is installed for compatibility.
 - **Virtual Environment**: Utilization of a virtual environment (.venv) is recommended for managing dependencies.
+- **PLC Firmware**: Ensure using firmware 4.0. We tried using 4.5 and there were issues fixed by downgrading the firmware.
 
 ## Installation of xArm Python SDK
 
@@ -30,8 +31,9 @@ To interact with the xArm, the xArm Python SDK is required. Follow these steps f
 Ensure the network configuration is as follows to facilitate communication with the xArm:
 
 - Robot IP: 192.168.1.208
-- Gateway: 192.168.1.1
-- PC IP: 192.168.1.55
+- Gateway(/Preferred DNS): 192.168.1.1
+- PC IP: 192.168.1.55 (for robot programming)
+- PC IP: 192.168.0.8 (for PLC-python-snap7 programming)
 - Laptop Ethernet IP: 192.168.1.242
 - HMI IP: 192.168.1.2
 - Subnet Mask: 255.255.255.0
