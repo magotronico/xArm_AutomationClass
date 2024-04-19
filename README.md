@@ -32,10 +32,11 @@ Ensure the network configuration is as follows to facilitate communication with 
 
 - Robot IP: 192.168.1.208
 - Gateway(/Preferred DNS): 192.168.1.1
-- PC IP: 192.168.1.55 (for robot programming)
-- PC IP: 192.168.0.8 (for PLC-python-snap7 programming)
-- Laptop Ethernet IP: 192.168.1.242
+- PC IP: 192.168.1.55
+- Laptop Ethernet IP: 192.168.1.8
+- PLC IP: 192.168.1.1
 - HMI IP: 192.168.1.2
+- Camera IP 192.168.1.130
 - Subnet Mask: 255.255.255.0
 
 ## Usage

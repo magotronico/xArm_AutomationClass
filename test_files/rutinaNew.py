@@ -11,8 +11,6 @@
 #   1. Changes to this file on Studio will not be preserved
 #   2. The next conversion will overwrite the file with the same name
 """
-import socket
-import os
 import sys
 import math
 import time
@@ -43,7 +41,6 @@ def pprint(*args, **kwargs):
 
 pprint('xArm-Python-SDK Version:{}'.format(version.__version__))
 
-""" Init xArm Object """
 arm = XArmAPI('192.168.1.208')
 arm.clean_warn()
 arm.clean_error()
@@ -52,12 +49,9 @@ arm.set_mode(0)
 arm.set_state(0)
 time.sleep(1)
 
-variables = {'height': 0, 'max_cubes': 0, 'COUNTER': 0}
+variables = {'COUNTER': 0, 'max_cubes': 0, 'height': 0}
 params = {'speed': 100, 'acc': 2000, 'angle_speed': 20, 'angle_acc': 500, 'events': {}, 'variables': variables, 'callback_in_thread': True, 'quit': False}
 
-""" Camara info """
-HOST = "192.168.1.130"  # The server's hostname or IP address
-PORT = 20000  # The port used by the server
 
 # Register error/warn changed callback
 def error_warn_change_callback(data):
@@ -77,47 +71,6 @@ def state_changed_callback(data):
             arm.release_state_changed_callback(state_changed_callback)
 arm.register_state_changed_callback(state_changed_callback)
 
-# Function to request the pose from the camera
-def rqst_pose(arm):
-    arm.set_cgpio_digital(2, 1)
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(None)  # Disable the timeout
-        s.connect((HOST, PORT))
-        s.sendall(b"cmd Online")
-        s.sendall(b"cmd trigger")
-        data = s.recv(24) #IMPORTANTE REVISAR EL TAMAÑO DEL STRING QUE SE ENVÍA PARA SELECCIONAR LOS BITES ADECUADOS 
-
-    print(f"Received2 {data!r}")
-
-    str1 = data.decode('UTF-8')
-    t=str1.split(" ")   #IMPORTANTE REVISAR CUAL ES EL CARACTER USADO PARA DELIMITAR CADA DATO
-    x=float(t[0])
-    y=float(t[1])
-    r=float(t[2])
-    arm.set_cgpio_digital(1, 0)
-
-    return x, y, r
-
-# Funciton to convert from pixeceles (cam) to mm (robot)
-def pix2mm(x, y):
-    if x == 0 and y == 0:
-        return 0, 0
-    else:
-        x_mm = (x - 295) / 4.9715
-        y_mm = (y - 235) / 4.9715
-    return x_mm, y_mm
-
-# Function to compute new pose with the camera info
-def compute_new_pose(arm):
-    x,y,r = rqst_pose(arm)
-    x_mm, y_mm = pix2mm(x, y)
-    print(f"Received: x={x_mm}mm, y={y_mm}mm, r={r} degrees")
-    new_x = -463.8 + x_mm
-    new_y = 610.1 + y_mm
-    new_yaw = 89.9 - r
-    print(f"New pose: x={new_x}mm, y={new_y}mm, r={new_yaw} degrees")
-    return new_x, new_y, new_yaw
 
 # Register counter value changed callback
 if hasattr(arm, 'register_count_changed_callback'):
@@ -135,7 +88,6 @@ def connect_changed_callback(data):
         arm.release_connect_changed_callback(error_warn_change_callback)
 arm.register_connect_changed_callback(connect_changed_callback)
 
-# Set initial parameters
 if arm.error_code == 0 and not params['quit']:
     code = arm.set_tgpio_digital(0, 0, delay_sec=0)
     if code != 0:
@@ -156,9 +108,7 @@ if not params['quit']:
 if not params['quit']:
     params['variables']['max_cubes'] = 3
 if not params['quit']:
-    params['variables']['height'] = 48
-
-# Main loop
+    params['variables']['height'] = 55
 while True:
     if params['quit']:
         break
@@ -179,23 +129,19 @@ while True:
                 params['quit'] = True
                 pprint('set_servo_angle, code={}'.format(code))
         if not params['quit']:
-            """" Time to wait for the robot to reach the position"""
-            time.sleep(2)
-            new_x, new_y, new_yaw = compute_new_pose(arm)
-            time.sleep(2)
+            time.sleep(1)
         if arm.error_code == 0 and not params['quit']:
-            code = arm.set_position(*[-463.8, 610.1, 39.4, 180.0, 0.2, 89.9], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+            code = arm.set_position(*[-55.1, 399.5, 14.0, 180.0, 0.2, 88.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
             if code != 0:
                 params['quit'] = True
                 pprint('set_position, code={}'.format(code))
         if arm.error_code == 0 and not params['quit']:
-            print(f"will be sent to: x={new_x}mm, y={new_y}mm, r={new_yaw} degrees")
-            code = arm.set_position(*[new_x, new_y, 39.4,180,0.2, new_yaw], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+            code = arm.set_position(*[-55.1,399.5,14,180,0.2,88.2], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
             if code != 0:
                 params['quit'] = True
                 pprint('set_position, code={}'.format(code))
         if arm.error_code == 0 and not params['quit']:
-            code = arm.set_position(*[new_x, new_y, -56.1,180,0.2, new_yaw], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+            code = arm.set_position(*[-55.1,399.5,-50,180,0.2,88.2], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
             if code != 0:
                 params['quit'] = True
                 pprint('set_position, code={}'.format(code))
@@ -205,18 +151,18 @@ while True:
                 params['quit'] = True
                 pprint('set_cgpio_digital, code={}'.format(code))
         if arm.error_code == 0 and not params['quit']:
-            code = arm.set_position(*[-466.4, 623.5, 115.8, 180.0, 0.1, 92.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+            code = arm.set_position(*[-55.1, 399.5, 14.0, 180.0, 0.2, 88.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
             if code != 0:
                 params['quit'] = True
                 pprint('set_position, code={}'.format(code))
         if arm.error_code == 0 and not params['quit']:
-            code = arm.set_position(*[-50,(200 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),117,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+            code = arm.set_position(*[284,(0 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),30,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
             if code != 0:
                 params['quit'] = True
                 pprint('set_position, code={}'.format(code))
         if params['variables'].get('COUNTER', 0) == params['variables'].get('max_cubes', 0):
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-69.0, 158.0, -58.8, 179.9, -2.0, 92.5], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+                code = arm.set_position(*[284,(-80 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_position, code={}'.format(code))
@@ -225,21 +171,21 @@ while True:
                 if code != 0:
                     params['quit'] = True
                     pprint('set_cgpio_digital, code={}'.format(code))
-            if not params['quit']:
-                params['variables']['COUNTER'] = 1
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_servo_angle(angle=[0.0, -30.7, -38.9, 0.0, 70.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+                code = arm.set_position(*[284,(-80 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
-                    pprint('set_servo_angle, code={}'.format(code))
+                    pprint('set_position, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
                 code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_servo_angle, code={}'.format(code))
+            if not params['quit']:
+                params['variables']['COUNTER'] = (params['variables'].get('COUNTER', 0) + 1)
         else:
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-50,(158 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+                code = arm.set_position(*[330,(-80 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_position, code={}'.format(code))
@@ -249,7 +195,7 @@ while True:
                     params['quit'] = True
                     pprint('set_cgpio_digital, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-50,(158 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+                code = arm.set_position(*[330,(-80 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_position, code={}'.format(code))
