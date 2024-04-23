@@ -71,8 +71,8 @@ def init_robot():
     time.sleep(1)
     
     # Set initial variables
-    variables = {'height': 0, 'max_cubes': 0, 'COUNTER': 0}
-    params = {'speed': 100, 'acc': 2000, 'angle_speed': 20, 'angle_acc': 500, 'events': {}, 'variables': variables, 'callback_in_thread': True, 'quit': False}
+    variables = {'counterScrap': 0, 'isScrap': 0, 'max_cubes': 0, 'height': 0, 'counterPz': 0}
+    params = {'speed': 150, 'acc': 2000, 'angle_speed': 20, 'angle_acc': 500, 'events': {}, 'variables': variables, 'callback_in_thread': True, 'quit': False}
 
     # Register callbacks
     partialfunc = functools.partial(error_warn_change_callback,arm, params)
@@ -101,13 +101,17 @@ def init_robot():
     if arm.error_code == 0 and not params['quit']:
         arm.set_pause_time(0.5)
     if not params['quit']:
-        params['variables']['COUNTER'] = 0
+        params['variables']['counterPz'] = 0
+    if not params['quit']:
+        params['variables']['counterScrap'] = 0
     if not params['quit']:
         params['variables']['max_cubes'] = 3
     if not params['quit']:
-        params['variables']['height'] = 48
+        params['variables']['height'] = 55
+    if not params['quit']:
+        params['variables']['isScrap'] = 1
 
-    return arm, variables, params
+    return arm, params
 
 # Init camera info
 def init_camera():
@@ -162,120 +166,170 @@ def compute_new_pose(arm, HOST, PORT):
     return new_x, new_y, new_yaw
 
 def robotRoutine(arm, params, HOST, PORT):
-    while True:
-        if params['quit']:
-            break
-        if arm.get_cgpio_digital(6)[1]:
+    if params['quit']:
+        return
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_cgpio_digital(0, 0, delay_sec=0)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_cgpio_digital, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_servo_angle, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_servo_angle(angle=[102.5, -22.7, -79.1, 0.0, 102.0, 14.3], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_servo_angle, code={}'.format(code))
+    if not params['quit']:
+        time.sleep(1)
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_position(*[-55.1, 399.5, 14.0, 180.0, 0.2, 88.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_position, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_position(*[-55.1,399.5,14,180,0.2,88.2], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_position, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_position(*[-55.1,399.5,-50,180,0.2,88.2], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_position, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_cgpio_digital(0, 1, delay_sec=0)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_cgpio_digital, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_position(*[-55.1, 399.5, 14.0, 180.0, 0.2, 88.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_position, code={}'.format(code))
+    if arm.error_code == 0 and not params['quit']:
+        code = arm.set_position(*[284,(0 + (params['variables'].get('counterPz', 0) * params['variables'].get('height', 0))),30,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+        if code != 0:
+            params['quit'] = True
+            pprint('set_position, code={}'.format(code))
+    if params['variables'].get('isScrap', 0) == 0:
+        if params['variables'].get('counterPz', 0) == params['variables'].get('max_cubes', 0):
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_position(*[284.0, -80.0, -85.0, 179.9, 0.0, 0.0], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_position, code={}'.format(code))
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_cgpio_digital(0, 0, delay_sec=0)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_cgpio_digital, code={}'.format(code))
+            if not params['quit']:
+                params['variables']['counterPz'] = 1
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_servo_angle(angle=[0.0, -30.7, -38.9, 0.0, 70.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_servo_angle, code={}'.format(code))
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_servo_angle, code={}'.format(code))
+        else:
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_position(*[260,(-80 + (params['variables'].get('counterPz', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_position, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
                 code = arm.set_cgpio_digital(0, 0, delay_sec=0)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_cgpio_digital, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
+                code = arm.set_position(*[260,(-80 + (params['variables'].get('counterPz', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_position, code={}'.format(code))
+            if arm.error_code == 0 and not params['quit']:
                 code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_servo_angle, code={}'.format(code))
+            if not params['quit']:
+                params['variables']['counterPz'] = (params['variables'].get('counterPz', 0) + 1)
+    else:
+        if params['variables'].get('counterScrap', 0) == params['variables'].get('max_cubes', 0):
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_servo_angle(angle=[102.5, -22.7, -79.1, 0.0, 102.0, 14.3], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+                code = arm.set_position(*[230.0, -80.0, -85.0, 179.9, 0.0, 0.0], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_position, code={}'.format(code))
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_cgpio_digital(0, 0, delay_sec=0)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_cgpio_digital, code={}'.format(code))
+            if not params['quit']:
+                params['variables']['counterScrap'] = 1
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_servo_angle(angle=[0.0, -30.7, -38.9, 0.0, 70.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_servo_angle, code={}'.format(code))
-            if not params['quit']:
-                """" Time to wait for the robot to reach the position"""
-                time.sleep(2)
-                new_x, new_y, new_yaw = compute_new_pose(arm, HOST, PORT)
-                time.sleep(2)
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-72.2, 325.9, 348.7, 129.1, 125.1, -0.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+                code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
+                if code != 0:
+                    params['quit'] = True
+                    pprint('set_servo_angle, code={}'.format(code))
+        else:
+            if arm.error_code == 0 and not params['quit']:
+                code = arm.set_position(*[340,(-80 + (params['variables'].get('counterScrap', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_position, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
-                print(f"will be sent to: x={new_x}mm, y={new_y}mm, r={new_yaw} degrees")
-                code = arm.set_position(*[new_x, new_y, 348.7, 129.1, 125.1, new_yaw], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
-                if code != 0:
-                    params['quit'] = True
-                    pprint('set_position, code={}'.format(code))
-            if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[new_x, new_y, 14.0, 129.1, 125.1, new_yaw], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
-                if code != 0:
-                    params['quit'] = True
-                    pprint('set_position, code={}'.format(code))
-            if arm.error_code == 0 and not params['quit']:
-                code = arm.set_cgpio_digital(0, 1, delay_sec=0)
+                code = arm.set_cgpio_digital(0, 0, delay_sec=0)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_cgpio_digital, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-466.4, 623.5, 115.8, 180.0, 0.1, 92.2], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
+                code = arm.set_position(*[340,(-80 + (params['variables'].get('counterScrap', 0) * params['variables'].get('height', 0))),-85,180,0,0], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
                 if code != 0:
                     params['quit'] = True
                     pprint('set_position, code={}'.format(code))
             if arm.error_code == 0 and not params['quit']:
-                code = arm.set_position(*[-50,(200 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),117,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
+                code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
                 if code != 0:
                     params['quit'] = True
-                    pprint('set_position, code={}'.format(code))
-            if params['variables'].get('COUNTER', 0) == params['variables'].get('max_cubes', 0):
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_position(*[-69.0, 158.0, -58.8, 179.9, -2.0, 92.5], speed=params['speed'], mvacc=params['acc'], radius=-1.0, wait=True)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_position, code={}'.format(code))
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_cgpio_digital(0, 0, delay_sec=0)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_cgpio_digital, code={}'.format(code))
-                if not params['quit']:
-                    params['variables']['COUNTER'] = 1
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_servo_angle(angle=[0.0, -30.7, -38.9, 0.0, 70.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_servo_angle, code={}'.format(code))
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_servo_angle, code={}'.format(code))
-            else:
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_position(*[-50,(158 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_position, code={}'.format(code))
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_cgpio_digital(0, 0, delay_sec=0)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_cgpio_digital, code={}'.format(code))
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_position(*[-50,(158 + (params['variables'].get('COUNTER', 0) * params['variables'].get('height', 0))),-85,-179,1,88], speed=params['speed'], mvacc=params['acc'], radius=-1, wait=True)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_position, code={}'.format(code))
-                if arm.error_code == 0 and not params['quit']:
-                    code = arm.set_servo_angle(angle=[0.0, -70.0, -20.0, 0.0, 90.0, 0.0], speed=params['angle_speed'], mvacc=params['angle_acc'], wait=True, radius=-1.0)
-                    if code != 0:
-                        params['quit'] = True
-                        pprint('set_servo_angle, code={}'.format(code))
-                if not params['quit']:
-                    params['variables']['COUNTER'] = (params['variables'].get('COUNTER', 0) + 1)
+                    pprint('set_servo_angle, code={}'.format(code))
+            if not params['quit']:
+                params['variables']['counterScrap'] = (params['variables'].get('counterScrap', 0) + 1)
 
 def main():
     pprint('xArm-Python-SDK Version:{}'.format(version.__version__))
-    arm,variables, params = init_robot()
+    arm, params = init_robot()
     plc = init_plc()
     HOST, PORT = init_camera()
 
-
+    # To modify the value of params isScrap variable:   params['variables'].get('isScrap', 0)
     # Start the robot routine
-    robotRoutine(arm, params, HOST, PORT)
+    while True:
+        sensor = True
+        stopEmergency = False
+
+        if params['quit'] or stopEmergency:
+            break
+        elif sensor:
+            robotRoutine(arm, params, HOST, PORT)
+        else:
+            pass
 
 
-    
     # Disconnect the robot
     if hasattr(arm, 'release_count_changed_callback'):
         arm.release_count_changed_callback(count_changed_callback)

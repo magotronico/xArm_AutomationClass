@@ -48,7 +48,7 @@ def initialize_arm(ip):
     return arm
 
 def rqst_pose(arm):
-    arm.set_cgpio_digital(1, 1)
+    arm.set_cgpio_digital(2, 1)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(None)  # Disable the timeout
@@ -64,7 +64,7 @@ def rqst_pose(arm):
     x=float(t[0])
     y=float(t[1])
     r=float(t[2])
-    arm.set_cgpio_digital(1, 0)
+    arm.set_cgpio_digital(2, 0)
     return x, y, r
 
 # Funciton to convert from pixeceles (cam) to mm (robot)
