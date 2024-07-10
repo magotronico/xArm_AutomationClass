@@ -28,6 +28,14 @@ from xarm import version
 from xarm.wrapper import XArmAPI
 import socket
 
+"""
+Para agregar funcionalidad de comunicación por sockets TCP/IP, siga estos pasos:
+1. Importe la librería `socket` (import socket).
+2. Dentro del método `def _robot_init(self)`, agregue la línea `self._init_socket()`.
+3. Copie y pegue el método `def _init_socket(self)` para inicializar el socket.
+4. Copie y pegue el método `def recv_data(self)` para recibir datos a través del socket.
+5. Dentro del método `def run(self)`, agregue la línea `self.recv_data()` donde quiera empezar a escuchar datos a través del socket.
+"""
 
 class RobotMain(object):
     """Robot Main Class"""
@@ -54,6 +62,14 @@ class RobotMain(object):
         self._arm.register_state_changed_callback(self._state_changed_callback)
         if hasattr(self._arm, 'register_count_changed_callback'):
             self._arm.register_count_changed_callback(self._count_changed_callback)
+        self._init_socket()
+
+    def _init_socket(self):
+        # Define the server address and port
+        self.server_address = ('192.168.1.28', 20000)
+        # Create a TCP/IP socket
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print('Client created')
 
     # Register error/warn changed callback
     def _error_warn_changed_callback(self, data):
@@ -114,12 +130,12 @@ class RobotMain(object):
         else:
             return False
     
-    def recv_data(client_socket, server_address):
+    def recv_data(self):
         while True:
             try:
                 # Connect to the server
-                client_socket.connect(server_address)
-                print(f'Connected to server at {server_address}')
+                self.client_socket.connect(self.server_address)
+                print(f'Connected to server at {self.server_address}')
 
                 # # Send data
                 # message = b'This is a test message.'
@@ -127,24 +143,18 @@ class RobotMain(object):
                 # print(f'Sent: {message}')
 
                 # Receive response
-                data = client_socket.recv(1024)
+                data = self.client_socket.recv(1024)
                 print(f'Received: {data}')
 
             finally:
                 # Clean up the connection
-                client_socket.close()
+                self.client_socket.close()
                 print('Connection closed')
                 break
 
     # Robot Main Run
     def run(self):
         try:
-            # Define the server address and port
-            server_address = ('192.168.1.28', 20000)
-            # Create a TCP/IP socket
-            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print('Client created')
-
             self._tcp_speed = 104
             self._tcp_acc = 1000
             self._angle_speed = 19
@@ -169,25 +179,7 @@ class RobotMain(object):
                 if not self._check_code(code, 'set_cgpio_digital'):
                     return
                 # Receive data from Raspberry Pi 5
-                try:
-                    # Connect to the server
-                    client_socket.connect(server_address)
-                    print(f'Connected to server at {server_address}')
-
-                    # # Send data
-                    # message = b'This is a test message.'
-                    # client_socket.sendall(message)
-                    # print(f'Sent: {message}')
-
-                    # Receive response
-                    data = client_socket.recv(1024)
-                    print(f'Received: {data}')
-
-                finally:
-                    # Clean up the connection
-                    client_socket.close()
-                    print('Connection closed')
-                    break
+                self.recv_data()
 
                 interval = time.monotonic() - t1
                 if interval < 0.01:
