@@ -27,6 +27,7 @@ import threading
 from xarm import version
 from xarm.wrapper import XArmAPI
 import socket
+import ast
 
 """
 Para agregar funcionalidad de comunicación por sockets TCP/IP, siga estos pasos:
@@ -131,26 +132,30 @@ class RobotMain(object):
             return False
     
     def recv_data(self):
-        while True:
-            try:
-                # Connect to the server
-                self.client_socket.connect(self.server_address)
-                print(f'Connected to server at {self.server_address}')
+        try:
+            # Connect to the server
+            self.client_socket.connect(self.server_address)
+            print(f'Connected to server at {self.server_address}')
 
-                # # Send data
-                # message = b'This is a test message.'
-                # client_socket.sendall(message)
-                # print(f'Sent: {message}')
+            # Receive response
+            data = self.client_socket.recv(1024)
 
-                # Receive response
-                data = self.client_socket.recv(1024)
-                print(f'Received: {data}')
+            # Decode the bytes to a string
+            decoded_data = data.decode('utf-8')
 
-            finally:
-                # Clean up the connection
-                self.client_socket.close()
-                print('Connection closed')
-                break
+            # Convert the string representation to an actual list
+            data_list = ast.literal_eval(decoded_data)
+            print(f'Received(tuple): {data_list}')
+            x = data_list[0] # int
+            y = data_list[1] # int
+            category = data_list[2] # string
+
+        except Exception as e:
+            print(f'An error occurred: {e}')
+        finally:
+            # Clean up the connection
+            self.client_socket.close()
+            print('Connection closed')
 
     # Robot Main Run
     def run(self):
